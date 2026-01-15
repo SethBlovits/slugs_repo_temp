@@ -53,20 +53,28 @@ struct slugs_imgui_frame_buffer {
     slg_bindings bind[FrameCount];//This seems super scuffed
 }slimgui_frame_buffer;
 
+typedef struct{
+    int mouse_x;
+    int mouse_y;
 
+    bool left_mouse_down;
+    bool right_mouse_down;
+}slimgui_input_state_t;
 
 #ifdef SLUGS_IMGUI_IMPLEMENTATION
 unsigned char* pixels = NULL;
+slimgui_input_state_t slimgui_input_state;
+ImGuiIO* io;
 void slimgui_setup(){
     slg_framebuffer_t frame_buf = slg_d3d12_state.frame_buf;
     //_simgui.indices.size = (size_t)_simgui.desc.max_vertices * 3 * sizeof(ImDrawIdx);
     //_simgui.indices.ptr = _simgui_malloc(_simgui.indices.size);
     igCreateContext(NULL);
-
-    ImGuiIO* io = igGetIO();
+    
+    io = igGetIO();
     io->IniFilename = NULL;
-    io->DisplaySize.x = 800;
-    io->DisplaySize.y = 600;
+    io->DisplaySize.x = (float)slg_d3d12_state.appdata.width;
+    io->DisplaySize.y = (float)slg_d3d12_state.appdata.height;
 
 
     
@@ -194,7 +202,9 @@ void slimgui_setup(){
 void slimgui_frame(){
     slg_framebuffer_t frame_buf = slg_d3d12_state.frame_buf;
     //slg_app_data_t* app_data = &slg_d3d12_state.appdata;
-    
+    io->MousePos = (ImVec2){(float)slimgui_input_state.mouse_x,(float)slimgui_input_state.mouse_y};
+    io->MouseDown[0] = slimgui_input_state.left_mouse_down;
+    io->MouseDown[1] = slimgui_input_state.right_mouse_down;
     igNewFrame();
 
     igShowDemoWindow(NULL);
@@ -248,21 +258,47 @@ void slimgui_frame(){
     slg_set_bindings(&slimgui_frame_buffer.bind[frame_buf.frameIndex]);
     size_t current_index_draw = 0;
     size_t current_vertex_draw = 0;
-    
+    //temp
+    /*DXGI_SWAP_CHAIN_DESC sc;
+    slg_d3d12_state.frame_buf.swapchain->lpVtbl->GetDesc(slg_d3d12_state.frame_buf.swapchain,&sc);
+    ID3D12Resource* backbuffer = NULL;
+
+    HRESULT hr = slg_d3d12_state.frame_buf.swapchain->lpVtbl->GetBuffer(
+        slg_d3d12_state.frame_buf.swapchain,
+        slg_d3d12_state.frame_buf.frameIndex,                 // 0 .. bufferCount-1
+        &IID_ID3D12Resource,
+        (void**)&backbuffer
+    );
+    D3D12_RESOURCE_DESC desc;
+    backbuffer->lpVtbl->GetDesc(backbuffer,&desc);
+
+    UINT bb_width  = (UINT)desc.Width;
+    UINT bb_height = desc.Height;   // Height is UINT
+    ImVec2 display_size = io->DisplaySize;*/
+    //
+    RECT rect;
+    GetClientRect(app_data_d3d12.hwnd, &rect);
     for(int i = 0;i<draw_data->CmdListsCount;i++){
         ImDrawList* list = draw_data->CmdLists.Data[i];
-        
+        ImVec2 clip_off = draw_data->DisplayPos;
         for(int n  = 0;n<list->CmdBuffer.Size;n++){
             
             ImDrawCmd cmd = list->CmdBuffer.Data[n];
+            
 
             D3D12_RECT scissor_rect;
-            scissor_rect.left   = (LONG)cmd.ClipRect.x;
-            scissor_rect.top    = (LONG)cmd.ClipRect.y;
-            scissor_rect.right  = (LONG)cmd.ClipRect.z;
-            scissor_rect.bottom = (LONG)cmd.ClipRect.w;
+            scissor_rect.left   = (LONG)(cmd.ClipRect.x - clip_off.x);
+            scissor_rect.top    = (LONG)(cmd.ClipRect.y - clip_off.y);
+            scissor_rect.right  = (LONG)(cmd.ClipRect.z - clip_off.x);
+            scissor_rect.bottom = (LONG)(cmd.ClipRect.w - clip_off.y);
             command_list->lpVtbl->RSSetScissorRects(command_list,1,&scissor_rect);
-            
+            D3D12_VIEWPORT viewport = {
+                0.0f, 0.0f,
+                io->DisplaySize.x,
+                io->DisplaySize.y,
+                0.0f, 1.0f
+            };
+            command_list->lpVtbl->RSSetViewports(command_list,1,&viewport);
             //set the bindings and draw
 
             

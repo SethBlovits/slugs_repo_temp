@@ -110,6 +110,7 @@ typedef struct{
 #ifdef _WIN32
 struct app_data_t{
     HWND hwnd;
+    UINT app_dpi;
 }app_data_d3d12;
 #endif
 
@@ -283,19 +284,33 @@ void _create_window_Win32(int width, int height){
             MB_OK | MB_ICONEXCLAMATION);
         return;
     }
+    
+
+    // Adjust for window decorations (title bar, borders)
+    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+    DWORD dwExStyle = WS_EX_CLIENTEDGE;
+
+    // Adjust for BOTH the style AND extended style
+    RECT rect = {0, 0, width, height};
+    AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle); // Use AdjustWindowRectEx!
+
+    int windowWidth = rect.right - rect.left;
+    int windowHeight = rect.bottom - rect.top;
+
     app_data_d3d12.hwnd = CreateWindowEx(
-        WS_EX_CLIENTEDGE,
+        dwExStyle,           // Use the same extended style
         CLASS_NAME,
         "The title of my window",
-        WS_OVERLAPPEDWINDOW | WS_THICKFRAME,
-        CW_USEDEFAULT, CW_USEDEFAULT, width, height,
+        dwStyle,             // Use the same style
+        CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight,
         NULL, NULL, hInstance, NULL);
-
+        
     if(app_data_d3d12.hwnd == NULL){
         MessageBoxEx(NULL,"Window Creation Failed", "ERROR!",0,
             MB_OK|MB_ICONEXCLAMATION);
             return;
     }
+    app_data_d3d12.app_dpi = GetDpiForWindow(app_data_d3d12.hwnd);
     return;
 
     
