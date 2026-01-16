@@ -59,6 +59,8 @@ typedef struct{
 
     bool left_mouse_down;
     bool right_mouse_down;
+
+    float mouse_scroll_delta;
 }slimgui_input_state_t;
 
 #ifdef SLUGS_IMGUI_IMPLEMENTATION
@@ -200,17 +202,21 @@ void slimgui_setup(){
 }
 
 void slimgui_frame(){
-    slg_framebuffer_t frame_buf = slg_d3d12_state.frame_buf;
     //slg_app_data_t* app_data = &slg_d3d12_state.appdata;
     io->MousePos = (ImVec2){(float)slimgui_input_state.mouse_x,(float)slimgui_input_state.mouse_y};
     io->MouseDown[0] = slimgui_input_state.left_mouse_down;
     io->MouseDown[1] = slimgui_input_state.right_mouse_down;
+    io->MouseWheel = slimgui_input_state.mouse_scroll_delta / (float)WHEEL_DELTA;
+    slimgui_input_state.mouse_scroll_delta = 0;
     igNewFrame();
-
     igShowDemoWindow(NULL);
 
-    igRender();
+    
+}
 
+void slimgui_end_frame(){
+    slg_framebuffer_t frame_buf = slg_d3d12_state.frame_buf;
+    igRender();
     ImDrawData* draw_data = igGetDrawData();
     
     ID3D12GraphicsCommandList* command_list = frame_buf.frame_context[frame_buf.frameIndex].commandList;   
@@ -316,10 +322,6 @@ void slimgui_frame(){
     }
     free(final_verts);
     free(final_index);
-}
-
-void slimgui_end_frame(){
-    slg_submit_draw();
 }
 
 

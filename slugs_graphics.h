@@ -2469,11 +2469,11 @@ void _slg_d3d12_setup(){
     
     for(int i = 0;i<FrameCount;i++){
         //slg_d3d12_state.fence.fenceValue[i] = 0;
-        slg_d3d12_state.frame_buf.frame_context[i].fenceValue = 0;
+        slg_d3d12_state.frame_buf.frame_context[i].fenceValue = 1;
     }
     //slg_d3d12_state.fence.frameIndex = 0;
     slg_d3d12_state.frame_buf.frameIndex = 0; 
-    slg_d3d12_state.frame_buf.currentFenceValue = 0;
+    slg_d3d12_state.frame_buf.currentFenceValue = 1;
     _slg_d3d12_CreateFence();
     //slg_d3d12_state.desc.commandQueue->lpVtbl->Signal(slg_d3d12_state.fence.fence->fence, 0);
 

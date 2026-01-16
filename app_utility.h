@@ -134,6 +134,7 @@ int _conv_event_Win32(int,WPARAM,app_event_t*);
 int _conv_keycode_Win32(WPARAM);
 void _get_cursor_pos_Win32(int*,int*);
 
+
 #ifdef APP_UTILITY_IMPLEMENTATION
 
 #ifdef _WIN32
@@ -163,6 +164,9 @@ void _get_cursor_pos_Win32(int *out_x,int *out_y){
 
     *out_x = (int)point.x;
     *out_y = (int)point.y;
+}
+void _get_mouse_scroll_delta_Win32(int *out_delta){
+
 }
 int _conv_keycode_Win32(WPARAM wparam){
     switch(wparam){
@@ -304,7 +308,7 @@ void _create_window_Win32(int width, int height){
         dwStyle,             // Use the same style
         CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight,
         NULL, NULL, hInstance, NULL);
-        
+
     if(app_data_d3d12.hwnd == NULL){
         MessageBoxEx(NULL,"Window Creation Failed", "ERROR!",0,
             MB_OK|MB_ICONEXCLAMATION);
