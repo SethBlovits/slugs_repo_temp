@@ -207,25 +207,40 @@ void init(){
 }
 void frame(){
     app_get_cursor_pos(&slimgui_input_state.mouse_x,&slimgui_input_state.mouse_y);
-
     slg_begin_frame();
     slg_begin_pass();
     slimgui_frame();
+
+    ImVec2 pos = { 10.0f, 10.0f };
+    igSetNextWindowPos(pos, ImGuiCond_Once);
+    igBegin("Main", NULL, 0);
+    igText("custom main window");
+    igEnd();
+
     slimgui_end_frame();
+    slg_submit_draw();
 }
 void event(app_event_t* event){
     switch(event->event_code){
         case(APP_EVENT_MOUSE_LEFT_BUTTON_DOWN):{
             slimgui_input_state.left_mouse_down = true;
         }
+        break;
         case(APP_EVENT_MOUSE_LEFT_BUTTON_UP):{
             slimgui_input_state.left_mouse_down = false;
         }
+        break;
         case(APP_EVENT_MOUSE_RIGHT_BUTTON_DOWN):{
             slimgui_input_state.right_mouse_down = true;
         }
+        break;
         case(APP_EVENT_MOUSE_RIGHT_BUTTON_UP):{
             slimgui_input_state.right_mouse_down = false;
+        }
+        break;
+        case(APP_EVENT_SCROLL_WHEEL):{
+            slimgui_input_state.mouse_scroll_delta = event->mouse_wheel_delta;
+            event->mouse_wheel_delta = 0;
         }
 
     }
@@ -238,6 +253,7 @@ int main(){
         .frame_func = frame,
         .init_func = init,
         .cleanup_func = cleanup,
+        .event_func = event,
         .width = 800,
         .height = 600
     });
